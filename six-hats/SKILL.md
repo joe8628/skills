@@ -1,7 +1,7 @@
 ---
 name: six-hats
 description: Multi-perspective stress-test of a reconstructed solution using six bounded evaluation lenses — invoke after first-principles reconstruction is complete.
-version: 1.0
+version: 1.1
 updated: 2026-04-09
 ---
 
@@ -30,9 +30,15 @@ Execute hats in this order. Do not reorder. Do not skip.
 
 6. **🔴 Red Hat — Intuition**: What is the gut reaction? What feels wrong or right that cannot yet be articulated? Emotional and intuitive signal only — no justification required.
 
+## Live Session File
+Maintain a live session file at `docs/concepts/[concept-name].sixhats.live.md` throughout the session. Update it **after each hat is completed** — immediately after the user confirms a hat is complete and before opening the next. This file is the crash-recovery checkpoint. If the session is interrupted, the next session MUST load this file and resume from the first hat still marked PENDING or IN_PROGRESS.
+
+On startup: check for an existing `.sixhats.live.md` file for this concept. If found, load it, confirm the current state with the user, and resume from the first incomplete hat.
+
 ## Behavior
 - Run each hat as a discrete, labeled pass. Complete one fully before opening the next.
 - At the end of each hat, ask: "Does this feel complete, or should we go deeper on anything before moving on?" If yes, deepen. If no, advance.
+- **After the user confirms a hat is complete**: write its full output to the live session file and mark it COMPLETE before beginning the next hat.
 - After all six hats, produce a **Synthesis**: the most important signal from each hat, and what collectively they reveal about the reconstruction.
 - Explicitly seed `scamper`: from the Black Hat, identify the top E (Eliminate) and S (Substitute) candidates. From Yellow Hat, identify the top C (Combine) and M (Modify) candidates. From Green Hat, identify the top A (Adapt) and R (Reverse) candidates. This seeding is a required output section.
 - Do not allow the user to skip the Black Hat — it is the highest-value pass.
@@ -46,16 +52,17 @@ Expects:
 If any of these is missing, surface what is absent and wait.
 
 ## Process
-1. Load the input document from `first-principles`
-2. Run Blue Hat — establish evaluation objective and scope
-3. Run White Hat — surface facts and data gaps
-4. Run Yellow Hat — advocate for the reconstruction
-5. Run Black Hat — diagnose risks and failure modes
-6. Run Green Hat — surface creative pressure points and alternatives
-7. Run Red Hat — capture intuitive and emotional signal
-8. Produce Synthesis
-9. Produce SCAMPER seeds
-10. Output the full Evaluation Profile
+1. Check `docs/concepts/` for an existing `[concept-name].sixhats.live.md`. If found, load it and resume from the first hat not marked COMPLETE. Confirm with the user before proceeding.
+2. Load the input document from `first-principles`
+3. Run Blue Hat — establish evaluation objective and scope. Save to live file on completion.
+4. Run White Hat — surface facts and data gaps. Save to live file on completion.
+5. Run Yellow Hat — advocate for the reconstruction. Save to live file on completion.
+6. Run Black Hat — diagnose risks and failure modes. Save to live file on completion.
+7. Run Green Hat — surface creative pressure points and alternatives. Save to live file on completion.
+8. Run Red Hat — capture intuitive and emotional signal. Save to live file on completion.
+9. Produce Synthesis
+10. Produce SCAMPER seeds
+11. Output the full Evaluation Profile
 
 ## Boundaries
 - MUST complete all six hats — no skipping
@@ -64,6 +71,37 @@ If any of these is missing, surface what is absent and wait.
 - MUST produce explicit SCAMPER seeds as a required output section
 - Black Hat MUST identify at least two distinct failure modes
 - MUST ask for deepening confirmation after each hat before advancing
+
+## Live Session File Format
+
+```markdown
+# Six Hats Evaluation — Live Session: [Concept Name]
+
+**Status**: IN_PROGRESS
+**Source**: [first-principles filename]
+**Last Updated**: YYYY-MM-DD
+
+## Hat Progress
+
+| Hat | Name | Status |
+|-----|------|--------|
+| 🔵 Blue   | Process    | COMPLETE / IN_PROGRESS / PENDING |
+| ⚪ White  | Facts      | COMPLETE / IN_PROGRESS / PENDING |
+| 🟡 Yellow | Optimism   | COMPLETE / IN_PROGRESS / PENDING |
+| ⚫ Black  | Caution    | COMPLETE / IN_PROGRESS / PENDING |
+| 🟢 Green  | Creativity | COMPLETE / IN_PROGRESS / PENDING |
+| 🔴 Red    | Intuition  | COMPLETE / IN_PROGRESS / PENDING |
+
+## Completed Hat Outputs
+
+*(Full content of each completed hat — appended as hats are finished)*
+
+### 🔵 Blue Hat — Process
+<output>
+
+### ⚪ White Hat — Facts
+<output>
+```
 
 ## Output Document Format
 

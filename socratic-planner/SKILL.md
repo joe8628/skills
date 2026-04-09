@@ -1,7 +1,7 @@
 ---
 name: socratic-planner
 description: Interrogates a validated concept by systematically attacking every claim, constraint, and assumption until only what is genuinely defensible survives — invoke after forge produces a READY concept document.
-version: 1.1
+version: 1.2
 updated: 2026-04-09
 ---
 
@@ -30,13 +30,19 @@ All questions must belong to one of these archetypes. Do not ask questions outsi
 6. **Scope** — "Is this always true, or only in specific conditions?"
    - Targets: generalizations that may only hold in narrow cases
 
+## Live Session File
+Maintain a live session file at `docs/concepts/[concept-name].socratic.live.md` throughout the session. Update it **after every turn** — immediately after classifying or updating any claim. This file is the crash-recovery checkpoint. If the session is interrupted, the next session MUST load this file and resume from where interrogation stopped.
+
+On startup: check for an existing `.socratic.live.md` file for this concept. If found, load it, confirm the current state with the user, and resume from the first claim still marked 🔄 In Progress or from the next uninterrogated candidate.
+
 ## Behavior
-- On receiving the input document, extract every claim from the Accepted section of the forge document. Each becomes an interrogation candidate.
+- On receiving the input document, extract every claim from the Accepted section of the forge document. Each becomes an interrogation candidate. Write the full candidate list to the live session file immediately.
 - Maintain an **Interrogation Log** throughout the session with four sections:
   - ✅ Grounded: claims that survived interrogation — independently verified through evidence or logical necessity
   - ⚠️ Asserted: claims the user defended, but whose defense did not meet grounding criteria — carried forward with reduced confidence, flagged for `first-principles`
   - 💀 Collapsed: claims that did not survive — exposed as assumption, convention, or circular reasoning. Always note why they collapsed.
   - 🔄 In Progress: claims currently under interrogation
+- After every turn (after any classification or status change): rewrite the live session file with the full current state of the Interrogation Log, the remaining candidates, and the last question asked.
 - Ask exactly **one question per turn**. The question must target a specific claim and belong to a named archetype. State the archetype before asking.
 - After the user responds, apply **Defense Validation** before classifying:
   - A defense grounds a claim only if it satisfies at least one of: provides external evidence, demonstrates logical necessity, shows the claim is falsifiable and hasn't been falsified, or proves it holds independent of convention.
@@ -61,14 +67,15 @@ Expects a forge concept document with `Status: READY` containing:
 If the input document does not have `Status: READY`, refuse to proceed and instruct the user to complete the forge session first.
 
 ## Process
-1. Load the forge READY document
-2. Extract all items from the Accepted section — these are the interrogation candidates
-3. Order candidates: interrogate foundational claims first (those others depend on), surface-level claims last
-4. Begin interrogation: one claim, one question per turn
-5. Classify each claim as Grounded or Collapsed after the user responds
-6. If a collapsed claim has dependents, flag and re-interrogate them
-7. When all candidates are resolved: compile the verified problem statement
-8. Output the full Interrogation Document
+1. Check `docs/concepts/` for an existing `[concept-name].socratic.live.md`. If found, load it and resume from step 4 using the saved state. Confirm with the user before proceeding.
+2. Load the forge READY document
+3. Extract all items from the Accepted section — these are the interrogation candidates. Write them to the live session file with status PENDING.
+4. Order candidates: interrogate foundational claims first (those others depend on), surface-level claims last
+5. Begin interrogation: one claim, one question per turn. Update the live session file after each turn.
+6. Classify each claim as Grounded, Asserted, or Collapsed after the user responds. Update the live session file immediately.
+7. If a collapsed claim has dependents, flag and re-interrogate them
+8. When all candidates are resolved: compile the verified problem statement
+9. Output the full Interrogation Document
 
 ## Termination Condition
 The session ends when every item from the Accepted section is classified as Grounded, Asserted, or Collapsed, and no Grounded claim has been contradicted by a later answer. Do not end early. Do not skip claims. Asserted claims do not block termination but must be explicitly listed in the output.
@@ -84,6 +91,39 @@ The session ends when every item from the Accepted section is classified as Grou
 - MUST NOT re-interrogate items already in the forge Discarded section
 - MUST produce a verified problem statement before outputting the final document
 - MUST include all Asserted claims in the output with explicit notation that they were not independently verified
+
+## Live Session File Format
+
+```markdown
+# Socratic Interrogation — Live Session: [Concept Name]
+
+**Status**: IN_PROGRESS
+**Source**: [forge filename]
+**Last Updated**: YYYY-MM-DD
+
+## Candidates
+
+| # | Claim Label | Status |
+|---|-------------|--------|
+| 1 | [label]     | ✅ Grounded / ⚠️ Asserted / 💀 Collapsed / 🔄 In Progress / ⬜ PENDING |
+
+## Interrogation Log
+
+### ✅ Grounded
+- **[Label]** *(archetype)*: <claim and what independently grounds it>
+
+### ⚠️ Asserted
+- **[Label]** *(archetype)*: <claim and why the defense fell short>
+
+### 💀 Collapsed
+- **[Label]** *(archetype)*: <what the claim was and why it collapsed>
+  - *Load-bearing*: YES | NO
+
+### 🔄 In Progress
+- **[Label]**: <the current claim>
+  - *Last question asked*: <the exact question posed>
+  - *Archetype*: <archetype name>
+```
 
 ## Output Document Format
 

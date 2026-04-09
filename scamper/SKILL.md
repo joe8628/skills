@@ -1,7 +1,7 @@
 ---
 name: scamper
 description: Generates a grounded variant matrix from a stress-tested solution using seven systematic transformation lenses — invoke after six-hats evaluation is complete.
-version: 1.0
+version: 1.1
 updated: 2026-04-09
 ---
 
@@ -32,10 +32,16 @@ Apply all seven. Do not skip. Do not merge.
 
 7. **R — Reverse / Rearrange**: What happens if the order of operations is inverted? What if the user and system swap roles? What if the problem is approached from the opposite direction?
 
+## Live Session File
+Maintain a live session file at `docs/concepts/[concept-name].scamper.live.md` throughout the session. Update it **after each lens is applied** — immediately after generating variants for a lens, before moving to the next. This file is the crash-recovery checkpoint. If the session is interrupted, the next session MUST load this file and resume from the first lens still marked PENDING.
+
+On startup: check for an existing `.scamper.live.md` file for this concept. If found, load it, confirm the current state with the user, and resume from the first incomplete lens.
+
 ## Behavior
 - Load the SCAMPER Seeds section from the `six-hats` output first — these are pre-identified candidates and MUST be the starting point for the relevant lenses (E, S from Black Hat; C, M from Yellow Hat; A, R from Green Hat).
 - For each lens, produce 1–3 variants. Prefer quality over quantity — one sharp variant beats three vague ones.
 - Each variant must have: a name, the lens it came from, its lineage (which seed or finding generated it), and a one-sentence rationale for why it is non-trivial.
+- **After completing each lens**: write its variants to the live session file and mark the lens COMPLETE before opening the next.
 - After all seven lenses, produce the **Variant Matrix**: a consolidated table of all variants with their lens, lineage, and rationale.
 - Identify the **High-Signal Variants**: the 2–3 variants that, based on their lineage and the evaluation profile, are most worth pursuing. Do not evaluate them — just flag them as high-signal based on where they came from.
 - Ask one clarifying question only if a lens produces nothing meaningful — do not force trivial variants.
@@ -47,13 +53,14 @@ Expects:
 - The SCAMPER Seeds section (required — do not proceed without it)
 
 ## Process
-1. Load the input document from `six-hats`
-2. Extract SCAMPER Seeds — these seed the relevant lenses
-3. Apply each lens in order (S → C → A → M → P → E → R)
-4. For each lens: generate 1–3 variants, name them, trace their lineage
-5. Compile the Variant Matrix
-6. Flag High-Signal Variants
-7. Output the full Variant Matrix Document
+1. Check `docs/concepts/` for an existing `[concept-name].scamper.live.md`. If found, load it and resume from the first lens not marked COMPLETE. Confirm with the user before proceeding.
+2. Load the input document from `six-hats`
+3. Extract SCAMPER Seeds — these seed the relevant lenses
+4. Apply each lens in order (S → C → A → M → P → E → R). Save variants to live file after each lens.
+5. For each lens: generate 1–3 variants, name them, trace their lineage
+6. Compile the Variant Matrix
+7. Flag High-Signal Variants
+8. Output the full Variant Matrix Document
 
 ## Boundaries
 - MUST use SCAMPER Seeds from `six-hats` as starting points — not ignored
@@ -62,6 +69,35 @@ Expects:
 - MUST NOT produce vague variants — every variant must be specific enough to be architected
 - MUST trace every variant to its lens and lineage
 - P lens (Put to Other Uses) MUST explore at least one adjacent problem space
+
+## Live Session File Format
+
+```markdown
+# SCAMPER — Live Session: [Concept Name]
+
+**Status**: IN_PROGRESS
+**Source**: [six-hats filename]
+**Last Updated**: YYYY-MM-DD
+
+## Lens Progress
+
+| Lens | Name | Status |
+|------|------|--------|
+| S | Substitute   | COMPLETE / IN_PROGRESS / PENDING |
+| C | Combine      | COMPLETE / IN_PROGRESS / PENDING |
+| A | Adapt        | COMPLETE / IN_PROGRESS / PENDING |
+| M | Modify       | COMPLETE / IN_PROGRESS / PENDING |
+| P | Put to Other Uses | COMPLETE / IN_PROGRESS / PENDING |
+| E | Eliminate    | COMPLETE / IN_PROGRESS / PENDING |
+| R | Reverse      | COMPLETE / IN_PROGRESS / PENDING |
+
+## Variants (in progress)
+
+*(Appended as each lens is completed)*
+
+### S — Substitute
+- **[Variant name]** *(seed: [lineage])* — <rationale>
+```
 
 ## Output Document Format
 

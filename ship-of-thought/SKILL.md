@@ -1,7 +1,7 @@
 ---
 name: ship-of-thought
 description: Orchestrates the full idea development pipeline across five sequential skills — invoke when a raw idea needs to be taken from concept through to a grounded variant matrix ready for architecture.
-version: 1.0
+version: 1.1
 updated: 2026-04-09
 ---
 
@@ -34,6 +34,18 @@ State file tracks:
 - The output artifact of each completed stage (filename or inline reference)
 - Any blockers preventing stage advancement
 - The concept name (set at Stage 0, used for all filenames)
+
+## Live Session Files
+Stages 1–4 each maintain a live session file that is updated after every turn within the stage (not just at stage completion). These files are the crash-recovery checkpoints for intra-stage progress:
+
+| Stage | Skill | Live File |
+|-------|-------|-----------|
+| 1 | socratic-planner | `[concept-name].socratic.live.md` |
+| 2 | first-principles | `[concept-name].axioms.live.md` |
+| 3 | six-hats | `[concept-name].sixhats.live.md` |
+| 4 | scamper | `[concept-name].scamper.live.md` |
+
+Stage 0 (forge) writes directly to its concept file after every exchange — no separate live file is needed.
 
 ## Entry and Exit Contracts
 
@@ -74,7 +86,7 @@ State file tracks:
 
 ## Startup Sequence
 1. Check `docs/concepts/` for an existing `[concept-name].pipeline.md`
-2. If found: load it, identify the last completed stage, confirm with the user before resuming
+2. If found: load it, identify the last completed stage and any IN_PROGRESS stage. For an IN_PROGRESS stage, also check for its live session file (see Live Session Files table). If a live file exists, surface its current state to the user and confirm before resuming — the active skill will use it to restore its intra-stage progress. Confirm with the user before resuming.
 3. If not found: ask the user for the concept name (used for all filenames), create the state file, begin at Stage 0
 4. Announce the pipeline to the user before beginning:
 
