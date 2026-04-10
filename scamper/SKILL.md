@@ -1,8 +1,8 @@
 ---
 name: scamper
 description: Generates a grounded variant matrix from a stress-tested solution using seven systematic transformation lenses — invoke after six-hats evaluation is complete.
-version: 1.1
-updated: 2026-04-09
+version: 1.2
+updated: 2026-04-10
 ---
 
 ## Purpose
@@ -16,7 +16,7 @@ You are a systematic generative engine. Your job is to produce intentional mutat
 
 ## The Seven Lenses
 
-Apply all seven. Do not skip. Do not merge.
+Engage all seven lenses in order. Do not merge lenses. If the SCAMPER seeds and evaluation profile do not naturally produce a non-trivial variant for a lens, explicitly state why and mark it `N/A — no meaningful variant` in the live file. A blank lens is better than a fabricated one. This is not skipping — it is honest triage.
 
 1. **S — Substitute**: What component, assumption, technology, or mechanism in the solution can be replaced with something else? What happens if you swap the core approach entirely?
 
@@ -41,10 +41,11 @@ On startup: check for an existing `.scamper.live.md` file for this concept. If f
 - Load the SCAMPER Seeds section from the `six-hats` output first — these are pre-identified candidates and MUST be the starting point for the relevant lenses (E, S from Black Hat; C, M from Yellow Hat; A, R from Green Hat).
 - For each lens, produce 1–3 variants. Prefer quality over quantity — one sharp variant beats three vague ones.
 - Each variant must have: a name, the lens it came from, its lineage (which seed or finding generated it), and a one-sentence rationale for why it is non-trivial.
-- **After completing each lens**: write its variants to the live session file and mark the lens COMPLETE before opening the next.
+- **After completing each lens**: (1) present its variants to the user, (2) wait for acknowledgment before opening the next lens. Do not pre-generate all lenses — each lens is a separate conversation turn. Only after the user acknowledges: (3) write the variants to the live session file, mark the lens COMPLETE, and proceed.
+- **Lens quality check**: Before generating variants for a lens, ask — does the six-hats seed profile naturally lead here? If not, state why and mark it `N/A` rather than fabricating a weak variant.
 - After all seven lenses, produce the **Variant Matrix**: a consolidated table of all variants with their lens, lineage, and rationale.
 - Identify the **High-Signal Variants**: the 2–3 variants that, based on their lineage and the evaluation profile, are most worth pursuing. Do not evaluate them — just flag them as high-signal based on where they came from.
-- Ask one clarifying question only if a lens produces nothing meaningful — do not force trivial variants.
+- Ask one clarifying question only if a lens produces nothing meaningful and N/A is not obvious — do not force trivial variants.
 
 ## Input Contract
 Expects:
@@ -56,7 +57,7 @@ Expects:
 1. Check `docs/concepts/` for an existing `[concept-name].scamper.live.md`. If found, load it and resume from the first lens not marked COMPLETE. Confirm with the user before proceeding.
 2. Load the input document from `six-hats`
 3. Extract SCAMPER Seeds — these seed the relevant lenses
-4. Apply each lens in order (S → C → A → M → P → E → R). Save variants to live file after each lens.
+4. Apply each lens in order (S → C → A → M → P → E → R). For each lens: generate variants, present to user, wait for acknowledgment, then save to live file and mark COMPLETE before proceeding to the next.
 5. For each lens: generate 1–3 variants, name them, trace their lineage
 6. Compile the Variant Matrix
 7. Flag High-Signal Variants
@@ -64,7 +65,7 @@ Expects:
 
 ## Boundaries
 - MUST use SCAMPER Seeds from `six-hats` as starting points — not ignored
-- MUST apply all seven lenses — no skipping
+- MUST engage all seven lenses — may mark a lens `N/A` with a stated reason, but may not silently skip or fabricate a weak variant to fill the slot
 - MUST NOT evaluate or rank variants — flagging high-signal is tracing, not ranking
 - MUST NOT produce vague variants — every variant must be specific enough to be architected
 - MUST trace every variant to its lens and lineage
@@ -83,13 +84,13 @@ Expects:
 
 | Lens | Name | Status |
 |------|------|--------|
-| S | Substitute   | COMPLETE / IN_PROGRESS / PENDING |
-| C | Combine      | COMPLETE / IN_PROGRESS / PENDING |
-| A | Adapt        | COMPLETE / IN_PROGRESS / PENDING |
-| M | Modify       | COMPLETE / IN_PROGRESS / PENDING |
-| P | Put to Other Uses | COMPLETE / IN_PROGRESS / PENDING |
-| E | Eliminate    | COMPLETE / IN_PROGRESS / PENDING |
-| R | Reverse      | COMPLETE / IN_PROGRESS / PENDING |
+| S | Substitute   | COMPLETE / IN_PROGRESS / PENDING / N/A |
+| C | Combine      | COMPLETE / IN_PROGRESS / PENDING / N/A |
+| A | Adapt        | COMPLETE / IN_PROGRESS / PENDING / N/A |
+| M | Modify       | COMPLETE / IN_PROGRESS / PENDING / N/A |
+| P | Put to Other Uses | COMPLETE / IN_PROGRESS / PENDING / N/A |
+| E | Eliminate    | COMPLETE / IN_PROGRESS / PENDING / N/A |
+| R | Reverse      | COMPLETE / IN_PROGRESS / PENDING / N/A |
 
 ## Variants (in progress)
 
