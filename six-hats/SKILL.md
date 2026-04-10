@@ -1,8 +1,8 @@
 ---
 name: six-hats
 description: Multi-perspective stress-test of a reconstructed solution using six bounded evaluation lenses — invoke after first-principles reconstruction is complete.
-version: 1.1
-updated: 2026-04-09
+version: 1.2
+updated: 2026-04-10
 ---
 
 ## Purpose
@@ -37,11 +37,85 @@ On startup: check for an existing `.sixhats.live.md` file for this concept. If f
 
 ## Behavior
 - Run each hat as a discrete, labeled pass. Complete one fully before opening the next.
-- At the end of each hat, ask: "Does this feel complete, or should we go deeper on anything before moving on?" If yes, deepen. If no, advance.
-- **After the user confirms a hat is complete**: write its full output to the live session file and mark it COMPLETE before beginning the next hat.
+- At the end of each hat, pose the **hat-specific exit prompt** (see Hat Exit Protocols below). Do NOT use a generic "does this feel complete?" question.
+- A hat is not complete until its **blocking criteria** are satisfied (see Hat Exit Protocols). Do not write the hat to the live file or advance until they are met.
+- If the user's response does not satisfy the blocking criteria, acknowledge what is still missing and re-ask. Push exactly once — if the second attempt still falls short, flag what criterion remains unmet and ask them to address it explicitly.
+- **After blocking criteria are satisfied**: write the hat's full output plus the user's responses to the live session file, mark it COMPLETE, then open the next hat.
 - After all six hats, produce a **Synthesis**: the most important signal from each hat, and what collectively they reveal about the reconstruction.
 - Explicitly seed `scamper`: from the Black Hat, identify the top E (Eliminate) and S (Substitute) candidates. From Yellow Hat, identify the top C (Combine) and M (Modify) candidates. From Green Hat, identify the top A (Adapt) and R (Reverse) candidates. This seeding is a required output section.
 - Do not allow the user to skip the Black Hat — it is the highest-value pass.
+
+## Hat Exit Protocols
+
+Each hat has two components that must both be satisfied before advancing:
+- **Exit prompt**: The specific question posed to the user after the hat's analysis is presented.
+- **Blocking criteria**: The minimum the user's response must contain. If the response does not meet these, do not advance.
+
+---
+
+### 🔵 Blue Hat — Exit Protocol
+
+**Exit prompt:**
+> "Before we move to White Hat: what specific decision will this evaluation help you make? And what outcome would cause you to stop or pivot the idea entirely?"
+
+**Blocking criteria:**
+- User has named a concrete decision (not "whether to proceed" — something specific like "which implementation path" or "whether the market assumption holds").
+- User has named at least one abort condition — a finding that would kill or fundamentally redirect the idea.
+
+---
+
+### ⚪ White Hat — Exit Protocol
+
+**Exit prompt:**
+> "Which data gap listed here is the most dangerous to your reconstruction — the one that, if it turns out to be wrong, breaks the most? Also: is there any fact or constraint you know from your context that isn't reflected here?"
+
+**Blocking criteria:**
+- User has identified one specific gap as highest-risk (not "all of them" — they must pick).
+- User has either added a fact from their context OR explicitly confirmed the list is complete from their vantage point.
+
+---
+
+### 🟡 Yellow Hat — Exit Protocol
+
+**Exit prompt:**
+> "Which strength listed here do you find most compelling — the one you'd lead with if pitching this? Which one are you least convinced by, or think is overstated?"
+
+**Blocking criteria:**
+- User has named a top strength (their pick, not just agreeing with the list).
+- User has named at least one strength they question or consider overstated.
+
+---
+
+### ⚫ Black Hat — Exit Protocol
+
+**Exit prompt:**
+> "Rank the top three risks from most to least likely. Then name the one you're most tempted to dismiss — and tell me why you'd dismiss it."
+
+**Blocking criteria:**
+- User has produced a ranking (partial is acceptable — at least two risks ordered).
+- User has named a risk they're tempted to dismiss AND given a reason. This is mandatory: the dismissal impulse is often where the most important blind spots live.
+
+---
+
+### 🟢 Green Hat — Exit Protocol
+
+**Exit prompt:**
+> "Pick one direction from this hat that you'd actually pursue if you had to choose today. What is the single thing stopping you from pursuing a second one right now?"
+
+**Blocking criteria:**
+- User has selected one specific direction (not "all of them are interesting").
+- User has named a constraint, risk, or gap that limits pursuing a second direction — forces a trade-off articulation.
+
+---
+
+### 🔴 Red Hat — Exit Protocol
+
+**Exit prompt:**
+> "Score your gut reaction to this reconstruction: 1 (walk away) to 10 (ship it). What's the single thing driving that number — the feeling you can't yet fully explain?"
+
+**Blocking criteria:**
+- User has given a numeric score.
+- User has named one driving factor — even vague or inarticulate is acceptable here. "It feels too complicated" counts. Silence does not.
 
 ## Input Contract
 Expects:
@@ -54,12 +128,12 @@ If any of these is missing, surface what is absent and wait.
 ## Process
 1. Check `docs/concepts/` for an existing `[concept-name].sixhats.live.md`. If found, load it and resume from the first hat not marked COMPLETE. Confirm with the user before proceeding.
 2. Load the input document from `first-principles`
-3. Run Blue Hat — establish evaluation objective and scope. Save to live file on completion.
-4. Run White Hat — surface facts and data gaps. Save to live file on completion.
-5. Run Yellow Hat — advocate for the reconstruction. Save to live file on completion.
-6. Run Black Hat — diagnose risks and failure modes. Save to live file on completion.
-7. Run Green Hat — surface creative pressure points and alternatives. Save to live file on completion.
-8. Run Red Hat — capture intuitive and emotional signal. Save to live file on completion.
+3. Run Blue Hat — establish evaluation objective and scope. Apply exit protocol. Save to live file only after blocking criteria are met.
+4. Run White Hat — surface facts and data gaps. Apply exit protocol. Save to live file only after blocking criteria are met.
+5. Run Yellow Hat — advocate for the reconstruction. Apply exit protocol. Save to live file only after blocking criteria are met.
+6. Run Black Hat — diagnose risks and failure modes. Apply exit protocol. Save to live file only after blocking criteria are met.
+7. Run Green Hat — surface creative pressure points and alternatives. Apply exit protocol. Save to live file only after blocking criteria are met.
+8. Run Red Hat — capture intuitive and emotional signal. Apply exit protocol. Save to live file only after blocking criteria are met.
 9. Produce Synthesis
 10. Produce SCAMPER seeds
 11. Output the full Evaluation Profile
@@ -70,7 +144,10 @@ If any of these is missing, surface what is absent and wait.
 - MUST NOT produce solution variants — that belongs to `scamper`
 - MUST produce explicit SCAMPER seeds as a required output section
 - Black Hat MUST identify at least two distinct failure modes
-- MUST ask for deepening confirmation after each hat before advancing
+- MUST use the hat-specific exit prompt after each hat — never a generic "feel complete?" question
+- MUST NOT advance to the next hat until the hat's blocking criteria are satisfied
+- MUST NOT write a hat as COMPLETE in the live file until blocking criteria are met
+- If the user's response does not meet blocking criteria, flag exactly what is missing and re-ask once before explicitly naming the unmet criterion
 
 ## Live Session File Format
 
