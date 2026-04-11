@@ -6,10 +6,10 @@ updated: 2026-04-10
 ---
 
 ## Purpose
-This skill evaluates a first-principles reconstruction by forcing six strictly separated perspectives in sequence. Each hat is a bounded lens — no mixing, no bleed. The output is a full evaluation profile: strengths, risks, gaps, emotional signal, creative pressure points, and a synthesis. It does NOT generate solution variants — that is the job of `scamper`.
+This skill evaluates a first-principles reconstruction by forcing six strictly separated perspectives in sequence. Each hat is a bounded lens — no mixing, no bleed. The output is a full evaluation profile: strengths, risks, gaps, emotional signal, creative pressure points, and a synthesis.
 
 ## Trigger
-Invoke when a first-principles reconstruction document is available and needs multi-dimensional evaluation before variant generation. Triggered explicitly by `ship-of-thought` after `first-principles` completes, or invoked standalone when the user says "stress-test this" or "what are we missing?"
+Invoke when a first-principles reconstruction document is available and needs multi-dimensional evaluation. Triggered explicitly by `ship-of-thought` after `first-principles` completes, or invoked standalone when the user says "stress-test this" or "what are we missing?"
 
 ## Role
 You are a structured evaluator. Your job is to prevent any single mode of thinking from dominating the assessment. You enforce hat boundaries strictly — optimism does not bleed into caution, facts do not bleed into intuition. Each pass produces a clean, bounded output that seeds the next.
@@ -42,7 +42,6 @@ On startup: check for an existing `.sixhats.live.md` file for this concept. If f
 - If the user's response does not satisfy the blocking criteria, acknowledge what is still missing and re-ask. Push exactly once — if the second attempt still falls short, flag what criterion remains unmet and ask them to address it explicitly.
 - **After blocking criteria are satisfied**: write the hat's full output plus the user's responses to the live session file, mark it COMPLETE, then open the next hat.
 - After all six hats, produce a **Synthesis**: the most important signal from each hat, and what collectively they reveal about the reconstruction.
-- Explicitly seed `scamper`: from the Black Hat, identify the top E (Eliminate) and S (Substitute) candidates. From Yellow Hat, identify the top C (Combine) and M (Modify) candidates. From Green Hat, identify the top A (Adapt) and R (Reverse) candidates. This seeding is a required output section.
 - Do not allow the user to skip the Black Hat — it is the highest-value pass.
 
 ## Hat Exit Protocols
@@ -135,14 +134,11 @@ If any of these is missing, surface what is absent and wait.
 7. Run Green Hat — surface creative pressure points and alternatives. Apply exit protocol. Save to live file only after blocking criteria are met.
 8. Run Red Hat — capture intuitive and emotional signal. Apply exit protocol. Save to live file only after blocking criteria are met.
 9. Produce Synthesis
-10. Produce SCAMPER seeds
-11. Output the full Evaluation Profile
+10. Output the full Evaluation Profile
 
 ## Boundaries
 - MUST complete all six hats — no skipping
 - MUST NOT mix hat perspectives within a single pass
-- MUST NOT produce solution variants — that belongs to `scamper`
-- MUST produce explicit SCAMPER seeds as a required output section
 - Black Hat MUST identify at least two distinct failure modes
 - MUST use the hat-specific exit prompt after each hat — never a generic "feel complete?" question
 - MUST NOT advance to the next hat until the hat's blocking criteria are satisfied
@@ -241,28 +237,15 @@ If any of these is missing, surface what is absent and wait.
 
 ## Synthesis
 
-<What the six passes collectively reveal about this reconstruction. What is the most important insight? What is the dominant signal? What cannot be ignored going into variant generation?>
+<What the six passes collectively reveal about this reconstruction. What is the most important insight? What is the dominant signal? What cannot be ignored?>
 
 ---
 
-## SCAMPER Seeds
+## Evaluation Summary
 
-*Direct input for the scamper skill. Derived from hat findings.*
-
-- **Eliminate (E)** candidates: <from Black Hat risks — what to cut>
-- **Substitute (S)** candidates: <from Black Hat — what to replace>
-- **Combine (C)** candidates: <from Yellow Hat strengths — what to merge>
-- **Modify (M)** candidates: <from Yellow Hat — what to amplify or reduce>
-- **Adapt (A)** candidates: <from Green Hat — what to borrow from other domains>
-- **Reverse (R)** candidates: <from Green Hat — what to invert or rearrange>
-
----
-
-## Ready for Generation
-
-**Evaluation summary**: <one tight paragraph — what the reconstruction looks like after full evaluation, what its dominant strength is, and what its most significant risk is>
+**Dominant strength**: <the single most important finding from Yellow or Green Hat>
 
 **Top risk**: <the single most important finding from Black Hat>
 
-**Top opportunity**: <the single most important finding from Yellow or Green Hat>
+**Overall signal**: <one tight paragraph — what the reconstruction looks like after full evaluation>
 ```

@@ -1,12 +1,12 @@
 ---
 name: ship-of-thought
-description: Orchestrates the full idea development pipeline across five sequential skills — invoke when a raw idea needs to be taken from concept through to a grounded variant matrix ready for architecture.
-version: 1.1
-updated: 2026-04-09
+description: Orchestrates the full idea development pipeline across four sequential skills — invoke when a raw idea needs to be taken from concept through to a fully evaluated solution ready for architecture.
+version: 1.2
+updated: 2026-04-10
 ---
 
 ## Purpose
-This skill orchestrates the complete idea development pipeline: concept validation → interrogation → distillation → evaluation → generation. It does no thinking itself. Its job is to track pipeline state, invoke the correct skill at the correct stage, ensure outputs are correctly formed before advancing, and maintain a single pipeline state file throughout the session. It is the only skill that knows the full sequence — individual skills know only their own inputs and outputs.
+This skill orchestrates the complete idea development pipeline: concept validation → interrogation → distillation → evaluation. It does no thinking itself. Its job is to track pipeline state, invoke the correct skill at the correct stage, ensure outputs are correctly formed before advancing, and maintain a single pipeline state file throughout the session. It is the only skill that knows the full sequence — individual skills know only their own inputs and outputs.
 
 ## Pipeline Stages
 
@@ -15,7 +15,6 @@ STAGE 0 — GATE        → forge
 STAGE 1 — INTERROGATE → socratic-planner
 STAGE 2 — DISTILL     → first-principles
 STAGE 3 — EVALUATE    → six-hats
-STAGE 4 — GENERATE    → scamper
 ```
 
 Each stage has a defined **entry contract** (what input it requires) and **exit contract** (what output it must produce before the next stage is unlocked). The orchestrator enforces both.
@@ -36,14 +35,13 @@ State file tracks:
 - The concept name (set at Stage 0, used for all filenames)
 
 ## Live Session Files
-Stages 1–4 each maintain a live session file that is updated after every turn within the stage (not just at stage completion). These files are the crash-recovery checkpoints for intra-stage progress:
+Stages 1–3 each maintain a live session file that is updated after every turn within the stage (not just at stage completion). These files are the crash-recovery checkpoints for intra-stage progress:
 
 | Stage | Skill | Live File |
 |-------|-------|-----------|
 | 1 | socratic-planner | `[concept-name].socratic.live.md` |
 | 2 | first-principles | `[concept-name].axioms.live.md` |
 | 3 | six-hats | `[concept-name].sixhats.live.md` |
-| 4 | scamper | `[concept-name].scamper.live.md` |
 
 Stage 0 (forge) writes directly to its concept file after every exchange — no separate live file is needed.
 
@@ -66,13 +64,8 @@ Stage 0 (forge) writes directly to its concept file after every exchange — no 
 
 ### Stage 3 — EVALUATE (six-hats)
 - **Entry**: The Axiom Document (Reconstructed Solution + Axiom Registry + Delta).
-- **Exit**: A Six Hats Evaluation Profile containing: all six hat passes, Synthesis, and SCAMPER Seeds section.
-- **Blocker condition**: Any hat pass is missing, or SCAMPER Seeds section is absent.
-
-### Stage 4 — GENERATE (scamper)
-- **Entry**: The Six Hats Evaluation Profile (full profile + SCAMPER Seeds).
-- **Exit**: A Variant Matrix Document containing: variants by lens, Variant Matrix table, High-Signal Variants, and Pipeline Complete section.
-- **Blocker condition**: Fewer than 4 of 7 lenses produced variants.
+- **Exit**: A Six Hats Evaluation Profile containing: all six hat passes and Synthesis.
+- **Blocker condition**: Any hat pass is missing.
 
 ## Behavior
 - At startup, check `docs/concepts/` for an existing pipeline state file for this concept. If found, resume from the last incomplete stage. If not found, begin at Stage 0.
@@ -81,7 +74,7 @@ Stage 0 (forge) writes directly to its concept file after every exchange — no 
 - If the exit contract is not met, surface the specific blocker and wait: `🚧 Stage N blocked — [what is missing and what must happen]`
 - Never advance to the next stage until the current stage's exit contract is fully satisfied.
 - Never skip a stage. The sequence is fixed.
-- At pipeline completion, announce: `🚢 Ship of Thought — pipeline complete` and surface the Pipeline Complete section from the scamper output.
+- At pipeline completion, announce: `🚢 Ship of Thought — pipeline complete` and surface the Synthesis section from the six-hats output.
 - If the user asks a substantive question mid-pipeline, defer to the active skill: "That's a question for [skill-name] — we're currently in Stage N."
 
 ## Startup Sequence
@@ -94,7 +87,7 @@ Stage 0 (forge) writes directly to its concept file after every exchange — no 
 🚢 Ship of Thought — pipeline initialized
 
 Concept: [name]
-Stages: GATE → INTERROGATE → DISTILL → EVALUATE → GENERATE
+Stages: GATE → INTERROGATE → DISTILL → EVALUATE
 
 Starting at Stage 0 — GATE
 ```
@@ -125,7 +118,6 @@ Starting at Stage 0 — GATE
 | 1     | INTERROGATE | socratic-planner   | ✅ COMPLETE | [filename] |
 | 2     | DISTILL     | first-principles   | IN_PROGRESS | — |
 | 3     | EVALUATE    | six-hats           | PENDING     | — |
-| 4     | GENERATE    | scamper            | PENDING     | — |
 
 ## Current Stage
 
