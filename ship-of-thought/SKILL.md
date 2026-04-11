@@ -74,8 +74,75 @@ Stage 0 (forge) writes directly to its concept file after every exchange — no 
 - If the exit contract is not met, surface the specific blocker and wait: `🚧 Stage N blocked — [what is missing and what must happen]`
 - Never advance to the next stage until the current stage's exit contract is fully satisfied.
 - Never skip a stage. The sequence is fixed.
-- At pipeline completion, announce: `🚢 Ship of Thought — pipeline complete` and surface the Synthesis section from the six-hats output.
+- At pipeline completion:
+  1. Validate Stage 3 exit contract is fully satisfied
+  2. Update the state file: set top-level `Status` to `COMPLETE` and Stage 3 row to `✅ COMPLETE`
+  3. Write `docs/concepts/[concept-name].complete.md` (see Pipeline Output below)
+  4. Announce: `🚢 Ship of Thought — pipeline complete → [concept-name].complete.md`
 - If the user asks a substantive question mid-pipeline, defer to the active skill: "That's a question for [skill-name] — we're currently in Stage N."
+
+## Pipeline Output
+
+On pipeline completion, write `docs/concepts/[concept-name].complete.md` by pulling the specified fields from each stage's output artifact. Do not summarize or reinterpret — extract the exact content that each stage produced.
+
+```markdown
+# [Concept Name] — Ship of Thought Complete
+
+**Date**: YYYY-MM-DD
+**Stages**: forge → socratic-planner → first-principles → six-hats
+
+---
+
+## Problem Statement
+*Source: Stage 1 (socratic-planner) — verified problem statement*
+
+<verbatim verified problem statement>
+
+---
+
+## Axioms
+*Source: Stage 2 (first-principles) — Axiom Registry*
+
+<numbered axiom list, one line each>
+
+---
+
+## Reconstructed Solution
+*Source: Stage 2 (first-principles) — Reconstructed Solution + Delta*
+
+<reconstructed solution>
+
+**Delta**: <what this solution does that the conventional approach does not>
+
+---
+
+## Evaluation
+*Source: Stage 3 (six-hats) — Evaluation Summary*
+
+**Dominant strength**: <from six-hats>
+**Top risk**: <from six-hats>
+**Overall signal**: <from six-hats>
+
+---
+
+## Synthesis
+*Source: Stage 3 (six-hats) — Synthesis*
+
+<verbatim synthesis paragraph>
+
+---
+
+## What Was Discarded
+*Source: Stage 0 (forge) discarded assumptions + Stage 1 (socratic-planner) discarded assumptions*
+
+- <assumption> — discarded at Stage N because <reason>
+
+---
+
+## Next Action
+
+<one sentence: what the reader should do with this document — typically "take to architecture" or "identify a prototype target from the Reconstructed Solution">
+```
 
 ## Startup Sequence
 1. Check `docs/concepts/` for an existing `[concept-name].pipeline.md`
@@ -136,4 +203,8 @@ Starting at Stage 0 — GATE
 - Stage 0: `docs/concepts/[concept-name].md` (forge READY document)
 - Stage 1: `docs/concepts/[concept-name].socratic.md`
 - *(Stage 2 in progress)*
+
+## Pipeline Output
+
+*(written at completion)*: `docs/concepts/[concept-name].complete.md`
 ```
