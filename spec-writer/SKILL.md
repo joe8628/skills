@@ -9,7 +9,7 @@ description: >
   notes and want a spec", "generate a spec from this concept doc", or "take my forge output and
   make a spec". Do not wait for the user to use the exact word "spec" — if they have design
   artifacts and want something structured for developers to build from, this skill applies.
-version: 1.0
+version: 1.1
 updated: 2026-04-13
 ---
 
@@ -69,13 +69,84 @@ Show this to the user and confirm nothing is missing before proceeding.
 Across all sources, identify:
 - **Overlaps**: the same concept described multiple times → consolidate into one canonical statement
 - **Conflicts**: contradictory requirements, goals, or constraints → surface them explicitly, do NOT silently pick one
-- **Gaps**: sections required by the spec format that no source addresses → flag as "requires input" or make a clearly labeled assumption
+- **Gaps**: sections required by the spec format that no source addresses → classify and feed into the Gap-Closure Wizard
 
 Present a **Reconciliation Summary** with these three categories. For conflicts, propose a
-resolution and ask the user to confirm before proceeding. For gaps, state the assumption you will
-use if the user does not intervene.
+resolution and ask the user to confirm before proceeding.
 
-Wait for user confirmation or corrections before proceeding to Phase 3.
+Then immediately enter Phase 2.5 before proceeding to drafting.
+
+### Phase 2.5 — Gap-Closure Wizard
+
+**Purpose:** Close gaps interactively before drafting so the spec reflects confirmed decisions,
+not assumptions. Do not skip this phase. Do not proceed to Phase 3 until all BLOCKING gaps are
+resolved or the user explicitly defers them.
+
+#### Gap Classification
+
+Classify every gap identified in Phase 2 into one of three tiers:
+
+| Tier | Label | Meaning |
+|------|-------|---------|
+| 1 | **BLOCKING** | Entire sections cannot be written without this. Development cannot begin. |
+| 2 | **IMPORTANT** | Section can be drafted with an assumption, but the assumption carries real risk. |
+| 3 | **MINOR** | Low-stakes detail; a reasonable default is defensible. |
+
+Examples:
+- "Who are the primary users?" → BLOCKING if no user section exists
+- "What is the expected request volume?" → IMPORTANT for an API with performance NFRs
+- "What should the spec file be named?" → MINOR
+
+#### Wizard Flow
+
+1. **Announce the gap count** before asking anything:
+   > "I found **N gaps** before I can write a solid spec: **X blocking**, **Y important**, **Z minor**.
+   > I'll ask about the blocking ones first — you can skip or defer any question."
+
+2. **Group questions by spec section**, not by gap tier. Present all questions for a section
+   together so the user can answer in context.
+
+3. **Batch size**: Ask at most **3–4 questions per turn**. Never ask one question at a time
+   unless only one gap remains. Never dump all questions at once.
+
+4. **Question format**: For each question, show:
+   - The section it feeds (e.g. `[§5 Functional Requirements]`)
+   - The tier: `[BLOCKING]`, `[IMPORTANT]`, or `[MINOR]`
+   - The question itself
+   - A suggested default (for IMPORTANT and MINOR tiers), so the user can confirm quickly
+
+   Example:
+   ```
+   [§4 Users & Stakeholders] [BLOCKING]
+   Who are the primary users of this system? Are there distinct roles with different permissions?
+
+   [§6 Non-Functional Requirements] [IMPORTANT]
+   Is there a target response time or throughput requirement?
+   → Default assumption: no explicit SLA; will mark as TBD.
+
+   [§9 Interface Contracts] [IMPORTANT]
+   Does this system expose a public API, or is it internal/backend only?
+   → Default assumption: internal only.
+   ```
+
+5. **Track progress**: After each turn where the user answers, show a one-line status:
+   > "Gap status: 2 blocking resolved, 1 blocking remaining · 3 important · 2 minor"
+
+6. **Proceed when**:
+   - All BLOCKING gaps are resolved, OR
+   - The user explicitly says to proceed (treating remaining blockers as deferred open decisions), OR
+   - The user says "skip wizard" (proceed immediately; all gaps become ⚠️ markers in the spec)
+
+7. **Carry answers forward**: Every answer from the wizard feeds directly into the spec draft.
+   Do not ask the user to repeat themselves.
+
+#### Wizard Exit
+
+When all BLOCKING gaps are resolved, confirm:
+> "All blocking gaps are resolved. [N important / M minor gaps remain — I'll note them in the
+> spec but proceed with stated defaults.] Ready to draft?"
+
+Wait for user confirmation, then enter Phase 3.
 
 ### Phase 3 — Draft the Spec
 
@@ -272,10 +343,14 @@ Generated automatically. Identifies areas that need attention before development
 
 - **Never silently resolve a conflict.** Surface it, propose a resolution, and wait for confirmation.
 - **Never omit a section.** If a section has no source material, mark it explicitly with the ⚠️ tag.
+- **Never skip the wizard.** Phase 2.5 is mandatory. The only exceptions are: the user types "skip wizard", or there are genuinely zero gaps after reconciliation.
+- **Never ask one question at a time.** Batch 3–4 questions per turn, grouped by spec section.
+- **Never draft over a BLOCKING gap.** If a BLOCKING gap is present and the user has not answered or explicitly deferred it, do not fabricate content — hold on that section and ask.
 - **Prefer precision over completeness.** A requirement like "the system should be fast" is not acceptable. Restate it as "the system SHOULD respond to API requests within 200ms at p99 under normal load" or flag it as ambiguous.
 - **Consolidate without losing signal.** When merging overlapping sources, ensure no distinct idea is dropped. If two sources say the same thing differently, use the clearer wording and note the merge.
 - **Preserve intent over wording.** Source documents may be informal. Rewrite for clarity but do not change meaning. When in doubt, quote the original and add your interpretation.
-- **Assumptions must be visible.** Every assumption made to fill a gap must appear in Section 10 and the Spec Health Report.
+- **Wizard answers are canon.** Everything the user confirms in Phase 2.5 is treated as confirmed input, not assumption. Do not re-flag wizard-confirmed answers as assumptions in the Spec Health Report.
+- **Assumptions must be visible.** Every assumption made to fill a gap the user did NOT answer must appear in Section 10 and the Spec Health Report.
 - **Ask before assuming on blockers.** If a gap would prevent a whole section from being written, stop and ask rather than fabricating content.
 
 ---
