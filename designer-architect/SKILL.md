@@ -11,7 +11,7 @@ description: >
   to architecture", "how should we build this", or when a spec file has a "Ready for Architecture"
   handoff block and the user wants to proceed. This skill is the second stage of the multidev
   agentic coding pipeline: forge → spec-writer → designer-architect → code-generator agents.
-version: 1.0
+version: 1.1
 updated: 2026-04-14
 ---
 
@@ -54,96 +54,115 @@ prior ADRs, stack constraint documents, or system context diagrams.
 
 ## Architecture Decision Log
 
-Maintain a running **Architecture Decision Log (ADL)** throughout the session with three sections:
-- ✅ **Decided**: Architectural decisions confirmed with rationale
-- 🔄 **Under Review**: Decisions being actively evaluated, trade-offs still open
-- ❌ **Rejected**: Options considered and ruled out, with reason
+Maintain a running **Architecture Decision Log (ADL)** throughout the session:
+- ✅ **Decided**: Confirmed with rationale
+- 🔄 **Under Review**: Currently being discussed (only the current topic)
+- ❌ **Deferred**: Skipped by the user — must be resolved before DAD is finalized
+- ~~Rejected~~: Options considered and ruled out (noted inline in the Decided entry)
 
-Update the ADL after every exchange. Include it at the end of every response during the session.
-The final ADL becomes the ADR appendix in the output document.
+Update the ADL after every topic resolution. Include a compact version at the end of
+every response showing the count of decided vs. remaining topics:
+
+> ADL: ✅ 4 decided | 🔄 Topic 5 in progress | 7 remaining
+
+The full ADL becomes the ADR appendix in the output document.
 
 ---
 
 ## Process
 
-### Phase 1 — Spec Audit
+The design session is a **dialogue, not a document dump**. Work through every open
+decision, ambiguity, and architectural choice **one topic at a time**. Only assemble the
+final document once every topic is resolved.
 
-Read the entire spec. Produce a **Spec Audit** covering:
+---
 
-1. **Open Decisions (OD-XX)**: List every open decision from the spec. These MUST be resolved
-   before the final document is produced. For each, propose a default resolution and flag it
-   for confirmation.
+### Step 1 — Spec Read and Topic Queue
 
-2. **Ambiguous Requirements**: List every requirement flagged as ambiguous in the Spec Health
-   Report or identified during reading. State clearly what architectural decision is blocked
-   by each ambiguity.
+Read the entire spec silently. Build an internal **Topic Queue** by collecting every item
+that requires a decision or clarification. Topics come from:
 
-3. **NFR Coverage**: Confirm whether NFRs are specific enough to drive architecture. If an NFR
-   is vague (e.g., "the system should be fast"), restate it as a specific target (e.g., "API
-   p99 response time ≤ 200ms under 500 RPS") and flag it for owner confirmation.
+- Open Decisions (OD-XX) in the spec
+- Ambiguous or vague requirements that block architectural choices
+- NFRs too vague to drive design (e.g., "the system should be fast")
+- Each Architecture Strategy choice (pattern, stack, deployment, communication)
+- Each architectural layer that has at least one open decision or risk
+- Security gaps not addressed by the spec
+- Observability gaps not addressed by the spec
 
-4. **Constraint Inventory**: List all constraints from Section 10 of the spec. These are
-   non-negotiable inputs to every architectural decision.
+After reading, announce only the **total count and categories** of topics found.
+Do not list them all. Example:
 
-Present the Spec Audit and wait for the user to confirm open decisions and ambiguous NFRs
-before proceeding. If the spec is clean, note that and proceed.
+> I've read the spec and found **11 topics** to work through before the design is final:
+> 4 open decisions from the spec, 2 vague NFRs, and 5 architectural layer decisions.
+> Let's go through them one by one. Ready?
 
-### Phase 2 — Architecture Strategy
+Then start immediately with Topic 1.
 
-Before designing individual layers, define the **overall architectural strategy**:
+---
 
-- **Pattern selection**: Monolith / Modular Monolith / Microservices / Event-driven /
-  Serverless / Hybrid — justify the choice against the spec's scale, team size constraints,
-  and NFRs.
-- **Technology stack**: Primary language(s), frameworks, runtime environments. If the spec
-  constrains the stack, confirm. If not, propose based on the context.
-- **Deployment model**: Single-region / Multi-region, containerized / VM-based / serverless,
-  orchestration approach.
-- **Communication style**: Synchronous REST/gRPC, async messaging, or hybrid — justified
-  against consistency and latency NFRs.
+### Step 2 — Topic Loop
 
-Present the strategy as a short narrative with explicit rationale. Wait for the user to
-confirm or redirect before designing individual layers.
+For **each topic in the queue**, present exactly one topic per message using this format:
 
-### Phase 3 — Layer-by-Layer Design
+---
 
-Design each architectural layer in sequence. For each layer, produce:
-- A prose description of the layer's responsibility
-- The components and their roles
-- The technology choices with rationale
-- How this layer connects to adjacent layers
-- Which FRs and NFRs this layer directly satisfies (by ID)
-- Risks and mitigations specific to this layer
+**Topic N of M — [Topic Title]**
 
-Layers to cover, in order. See `references/layers.md` for detailed guidance on each.
+**Context**: 2–4 sentences explaining what this part of the system is about and why this
+decision matters. Reference specific FRs, NFRs, or constraints from the spec by ID.
+Give enough detail that the user can make an informed choice without having to re-read
+the spec.
 
-1. **System Layer** — overall topology, service boundaries, external actors
-2. **Application Layer** — services/modules, their responsibilities, inter-service contracts
-3. **Data Layer** — storage technologies, schemas, ownership, migration strategy
-4. **API Layer** — detailed endpoint contracts, auth patterns, versioning, rate limiting
-5. **Infrastructure Layer** — deployment targets, CI/CD pipeline, environment strategy
-6. **Security Layer** — authn/authz model, secrets management, network policies, threat model
-7. **Observability Layer** — logging strategy, metrics, tracing, alerting, dashboards
-8. **Integration Layer** — external service dependencies, adapters, failure modes
+**Issue**: What is unclear, open, or in conflict. State concretely what architectural
+decision is blocked or what ambiguity exists.
 
-### Phase 4 — Spec Completion
+**Proposed solution**: Your recommended resolution with explicit rationale. Reference
+the spec's scale, constraints, NFRs, or team-size context to justify the choice. If
+there is a meaningful trade-off, name it and say why you prefer this side.
 
-Return to the original spec and complete it:
+*Does this work for you, or would you like to adjust?*
 
-- Resolve every OD-XX with the decision made in Phase 2–3
-- Annotate FRs with the component(s) responsible for fulfilling them
-- Upgrade vague NFRs with the specific targets defined in Phase 1
-- Mark the spec status as `Finalized`
+---
 
-Do not rewrite the spec from scratch — annotate and extend it in-place. Every change must
-be traceable to a decision in the ADL.
+**After the user responds:**
+- If **accepted** (explicitly or implicitly — no objection): record in the ADL as
+  ✅ Decided, then present the next topic immediately.
+- If **challenged or redirected**: discuss the alternative, reach a resolution together,
+  record in the ADL, then move to the next topic.
+- If the user asks to **skip** a topic: flag it as ❌ Deferred in the ADL (not Decided),
+  and note that it will need resolution before the DAD can be finalized.
+- Never present more than one topic per message. One topic, one decision, one step forward.
 
-### Phase 5 — Document Assembly
+**Topic ordering** (follow this sequence unless a later topic depends on resolving an
+earlier one sooner):
 
-Produce the final **Design and Architecture Document** using the Output Format below.
-Save as `design-[project-name].md`.
+1. **Spec Open Decisions (OD-XX)** — resolve spec ambiguities first; everything else
+   depends on them
+2. **Vague NFRs** — replace with specific measurable targets before they affect layer design
+3. **Architecture Strategy** — pattern, stack, deployment model, communication style
+   (one per topic — do not bundle into one topic)
+4. **Layer decisions** — for each layer with an open point, present it as one topic.
+   If a layer has no open points, skip it silently and continue; do not announce "no issues here"
+5. **Security gaps** — any auth, secrets, or threat model items the spec left open
+6. **Observability gaps** — logging, metrics, alerting items not covered
 
-### Phase 6 — Implementation Readiness Review
+---
+
+### Step 3 — Document Assembly (after all topics resolved)
+
+Only begin assembly once every topic in the queue is either ✅ Decided or flagged as a
+known ❌ Deferred item.
+
+Before assembling, state:
+
+> All topics resolved. Assembling the Design and Architecture Document now.
+
+Then produce the final DAD using the Output Format below. Save as `design-[project-name].md`.
+
+---
+
+### Step 4 — Implementation Readiness Review
 
 Before declaring the document final, assess:
 
@@ -155,6 +174,11 @@ Before declaring the document final, assess:
 - Are there any circular dependencies in the layer design?
 
 Append an **Implementation Readiness Report** at the end of the document.
+
+---
+
+**Layers reference**: See `references/layers.md` for detailed guidance on each architectural
+layer: system, application, data, API, infrastructure, security, observability, integration.
 
 ---
 
