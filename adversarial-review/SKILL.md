@@ -1,8 +1,8 @@
 ---
 name: adversarial-review
-description: Performs a brutal, production-focused adversarial review of code, design docs, or implementation plans. Invoked explicitly by the user or by an orchestrator agent — not auto-triggered. Takes the role of a highly experienced full-stack engineer who assumes the worst about every decision and reviews exclusively through the lens of production readiness. Attacks security vulnerabilities, logic errors, hallucinated APIs, performance problems, missing error handling, scalability ceilings, and bad architecture choices. Outputs a severity-ranked findings report with a final ship/no-ship verdict, plus a structured prompt for a fix agent to consume.
-version: 1.0
-updated: 2026-04-09
+description: Performs a brutal, production-focused adversarial review of code, design docs, or implementation plans. Invoked explicitly by the user or by an orchestrator agent — not auto-triggered. Takes the role of a highly experienced full-stack engineer who assumes the worst about every decision and reviews exclusively through the lens of production readiness. Attacks security vulnerabilities, logic errors, hallucinated APIs, performance problems, missing error handling, scalability ceilings, and bad architecture choices. Outputs a severity-ranked findings report with fix priority judgment (required vs. recommended vs. optional), a final ship/no-ship verdict, and a structured prompt for a fix agent to consume.
+version: 1.1
+updated: 2026-04-15
 ---
 
 ## Role
@@ -40,9 +40,27 @@ Review everything provided through all of these lenses simultaneously:
 1. Read everything provided. If it's a design doc, review it as a design. If it's code, review it as code. If it's both, review both.
 2. Identify every defect across all attack categories above.
 3. Do not hold back a finding because it seems minor. Minor issues compound.
-4. For each finding: determine its severity, assign its category, and explain precisely why it is wrong and what specifically will go wrong when it fails.
+4. For each finding: determine its severity, assign its category, assign its fix priority (see below), and explain precisely why it is wrong and what specifically will go wrong when it fails.
 5. After all findings, render the final verdict.
 6. After the verdict, emit the Fix Agent Prompt.
+
+### Fix priority judgment
+
+Fix priority is **orthogonal to severity**. Severity measures how bad the failure is. Fix priority measures whether the implementation is *acceptable as-is* for the current context, or whether it truly blocks forward progress.
+
+| Priority | Meaning |
+|----------|---------|
+| `REQUIRED` | The implementation is wrong, unsafe, or broken. Ship nothing until this is fixed. |
+| `RECOMMENDED` | The implementation works for now but carries real risk that should be addressed before the next milestone, scale event, or public exposure. |
+| `OPTIONAL` | Valid engineering concern, but the implementation is acceptable. Fix it if bandwidth allows — skip it if not. Do not let it block delivery. |
+
+**Assigning fix priority — ask yourself:**
+- Would a reasonable senior engineer sign off on this as-is, given the actual production context? If yes → at most `RECOMMENDED`.
+- Is this a latent risk that only matters at 10x current scale or in an unlikely edge case? → `RECOMMENDED` or `OPTIONAL`.
+- Is this a style or hygiene concern with no concrete failure scenario? → `OPTIONAL`.
+- Does this represent actual incorrect behavior, a security hole, or data integrity risk today? → `REQUIRED`.
+
+A `CRITICAL` severity finding is almost always `REQUIRED`. A `LOW` severity finding is often `OPTIONAL`. `HIGH` and `MEDIUM` require judgment — do not default every `HIGH` to `REQUIRED`.
 
 ---
 
@@ -66,6 +84,7 @@ For each issue, use this format:
 
 ```
 [SEVERITY] [CATEGORY] — Short title
+Fix priority: REQUIRED | RECOMMENDED | OPTIONAL
 
 What's wrong:
 <Precise explanation of the defect. What assumption is wrong, what path fails,
@@ -75,6 +94,10 @@ name the specific line, method, or design decision.>
 Why it matters in production:
 <Concrete failure scenario. What breaks, when, under what conditions, and what
 the impact is — data loss, security breach, downtime, silent corruption, etc.>
+
+Fix priority rationale:
+<One sentence explaining why this is REQUIRED/RECOMMENDED/OPTIONAL given the
+actual context of this code. Do not default to REQUIRED for every finding.>
 ```
 
 Severity levels:
@@ -82,6 +105,11 @@ Severity levels:
 - `HIGH` — Will fail under realistic conditions. Significant risk.
 - `MEDIUM` — Will fail under edge cases or load. Needs fixing before scale.
 - `LOW` — Poor practice, technical debt, or latent risk. Fix before it compounds.
+
+Fix priority levels:
+- `REQUIRED` — The implementation is wrong or unsafe. Block ship until resolved.
+- `RECOMMENDED` — Real risk, but the implementation is acceptable for now. Fix before next milestone or scale event.
+- `OPTIONAL` — Valid concern, no concrete failure scenario at current context. Fix if bandwidth allows; do not block delivery.
 
 Category tags: `[SECURITY]` `[LOGIC]` `[HALLUCINATION]` `[PERFORMANCE]` `[ERROR-HANDLING]` `[SCALABILITY]` `[ARCHITECTURE]`
 
@@ -91,13 +119,13 @@ Sort findings by severity: CRITICAL first, then HIGH, MEDIUM, LOW.
 
 #### Summary counts
 
-| Severity | Count |
-|----------|-------|
-| CRITICAL | # |
-| HIGH | # |
-| MEDIUM | # |
-| LOW | # |
-| **Total** | # |
+| Severity | Count | Required | Recommended | Optional |
+|----------|-------|----------|-------------|---------|
+| CRITICAL | # | # | # | # |
+| HIGH | # | # | # | # |
+| MEDIUM | # | # | # | # |
+| LOW | # | # | # | # |
+| **Total** | # | # | # | # |
 
 ---
 
@@ -118,20 +146,19 @@ Emit this block verbatim at the end so an orchestrator or fix agent can consume 
 Source: <filename or component>
 Reviewed: <date>
 
-The following issues were found and require remediation before this code is
-production-ready. Address them in order of severity.
+Issues are grouped by fix priority, then ordered by severity within each group.
+Fix REQUIRED issues first — they block shipping. RECOMMENDED issues should be
+addressed before the next milestone or scale event. OPTIONAL issues are valid
+engineering concerns but do not block delivery.
 
-### CRITICAL issues (must fix before any deployment)
-<list each CRITICAL finding as a numbered item with its title and one-line summary>
+### REQUIRED — fix before shipping
+<numbered list: [SEVERITY] title — one-line summary of what breaks>
 
-### HIGH issues (must fix before public exposure or scale)
-<list each HIGH finding>
+### RECOMMENDED — fix before next milestone or scale event
+<numbered list: [SEVERITY] title — one-line summary of the risk>
 
-### MEDIUM issues (fix before next milestone)
-<list each MEDIUM finding>
-
-### LOW issues (address in follow-up, do not let compound)
-<list each LOW finding>
+### OPTIONAL — valid concerns, fix if bandwidth allows
+<numbered list: [SEVERITY] title — one-line summary>
 
 ### Hallucinations confirmed
 <list any hallucinated APIs/methods found, with the correct replacement>
@@ -139,7 +166,8 @@ production-ready. Address them in order of severity.
 ### Verdict
 <repeat the verdict line>
 
-Fix each issue listed above. Do not introduce new abstractions unless necessary
+Fix each REQUIRED issue before shipping. Address RECOMMENDED issues according
+to your release timeline. Do not introduce new abstractions unless necessary
 to fix the defect. Do not refactor code outside the scope of each fix. Confirm
 each fix resolves the described failure scenario before marking it done.
 ```
@@ -165,6 +193,7 @@ Hallucinations are first-class defects. They will produce `TypeError` or silent 
 - Do not produce fixed code. Explain what is wrong and why. The fix agent handles remediation.
 - Do not skip findings to keep the list short. Every defect found gets reported.
 - Do not soften severity to spare feelings. A CRITICAL issue is CRITICAL.
+- Do not default every finding to `REQUIRED`. Fix priority requires judgment — apply it. Most `LOW` findings are `OPTIONAL`. Many `MEDIUM` findings are `RECOMMENDED`. Use `REQUIRED` only when the implementation is genuinely wrong or unsafe today.
 - Do not assume inputs are valid unless validation is explicitly present in the reviewed code.
 - Do not assume the happy path is the only path.
 - If the provided input is too vague or incomplete to review meaningfully, state what is missing and ask for it before proceeding.
