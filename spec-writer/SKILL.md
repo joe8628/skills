@@ -9,8 +9,8 @@ description: >
   notes and want a spec", "generate a spec from this concept doc", or "take my forge output and
   make a spec". Do not wait for the user to use the exact word "spec" — if they have design
   artifacts and want something structured for developers to build from, this skill applies.
-version: 1.1
-updated: 2026-04-13
+version: 1.2
+updated: 2026-04-14
 ---
 
 ## Purpose
@@ -55,115 +55,112 @@ it all before proceeding. Do not begin synthesis until all input is available.
 
 ## Process
 
-### Phase 1 — Ingest and Inventory
+The spec session is a **dialogue, not a document dump**. Work through every conflict,
+gap, and ambiguity **one topic at a time** before drafting. Only produce the full spec
+once all blocking topics are resolved.
 
-Read every provided input. Then produce a brief **Source Inventory** listing:
-- Each source identified (file name or label, e.g. "Paste 1", "forge handoff")
-- Its apparent type (concept doc, idea dump, partial spec, etc.)
+---
+
+### Step 1 — Ingest and Inventory
+
+Read every provided input. Produce a brief **Source Inventory** listing:
+- Each source (file name or label, e.g. "Paste 1", "forge handoff")
+- Its type (concept doc, idea dump, partial spec, meeting notes, etc.)
 - A one-sentence summary of its primary contribution
 
-Show this to the user and confirm nothing is missing before proceeding.
+Show this to the user and confirm nothing is missing. Then announce the topic count
+and start immediately:
 
-### Phase 2 — Reconcile
+> "I've read **N sources** and found **M topics** to work through before drafting:
+> **X conflicts**, **Y blocking gaps**, **Z important/minor gaps**.
+> Let's go through them one by one. Ready?"
 
-Across all sources, identify:
-- **Overlaps**: the same concept described multiple times → consolidate into one canonical statement
-- **Conflicts**: contradictory requirements, goals, or constraints → surface them explicitly, do NOT silently pick one
-- **Gaps**: sections required by the spec format that no source addresses → classify and feed into the Gap-Closure Wizard
+If there are zero conflicts and zero BLOCKING gaps, state that and move directly to
+Step 3 (Draft).
 
-Present a **Reconciliation Summary** with these three categories. For conflicts, propose a
-resolution and ask the user to confirm before proceeding.
+---
 
-Then immediately enter Phase 2.5 before proceeding to drafting.
+### Step 2 — Topic Loop
 
-### Phase 2.5 — Gap-Closure Wizard
+Work through every conflict, gap, and ambiguity **one topic per message** using this
+format:
 
-**Purpose:** Close gaps interactively before drafting so the spec reflects confirmed decisions,
-not assumptions. Do not skip this phase. Do not proceed to Phase 3 until all BLOCKING gaps are
-resolved or the user explicitly defers them.
+---
 
-#### Gap Classification
+**Topic N of M — [Topic Title]** `[CONFLICT | BLOCKING | IMPORTANT | MINOR]`
 
-Classify every gap identified in Phase 2 into one of three tiers:
+**Context**: 2–4 sentences explaining which spec section this feeds, why it matters,
+and what decision is at stake. Reference the source material that raised the issue
+(e.g., "Concept doc A says X while the forge handoff says Y").
+
+**Issue**: What is missing, contradictory, or unclear. State concretely what cannot
+be written in the spec without this being resolved.
+
+**Proposed answer**: Your recommended resolution or default assumption with explicit
+rationale. For IMPORTANT and MINOR tiers this is the default that will be used if the
+user confirms. For BLOCKING topics, present the most likely answer based on available
+context.
+
+*Does this work, or would you like to adjust?*
+
+---
+
+**After the user responds:**
+- **Accepted** (explicitly or no objection): record as confirmed, move to next topic.
+- **Challenged or redirected**: discuss, reach resolution, record, move to next topic.
+- **Skipped**: record as a deferred open decision (OD-XX in Section 11); flag with ⚠️
+  in the affected spec section.
+- **"Skip remaining"** / **"skip wizard"**: stop the loop, treat all unresolved topics
+  as ⚠️ markers in the spec, and proceed to drafting.
+- Never present more than one topic per message. One topic, one decision, one step forward.
+
+**Topic ordering:**
+
+1. **Conflicts** first — contradictions in the source material block everything else
+2. **BLOCKING gaps** — sections that cannot be drafted without an answer
+3. **IMPORTANT gaps** — sections that can use a default, but the risk is real
+4. MINOR gaps are silently resolved with stated defaults unless the user asks about them
+
+**Gap tiers:**
 
 | Tier | Label | Meaning |
 |------|-------|---------|
-| 1 | **BLOCKING** | Entire sections cannot be written without this. Development cannot begin. |
-| 2 | **IMPORTANT** | Section can be drafted with an assumption, but the assumption carries real risk. |
-| 3 | **MINOR** | Low-stakes detail; a reasonable default is defensible. |
+| 1 | **BLOCKING** | Entire section cannot be written without this. |
+| 2 | **IMPORTANT** | Can draft with a stated assumption, but assumption carries real risk. |
+| 3 | **MINOR** | Low-stakes; a reasonable default is defensible — resolve silently. |
 
-Examples:
-- "Who are the primary users?" → BLOCKING if no user section exists
-- "What is the expected request volume?" → IMPORTANT for an API with performance NFRs
-- "What should the spec file be named?" → MINOR
+**Progress line**: After each topic, include a one-liner:
+> Topics: ✅ 4 resolved | 🔄 Topic 5 in progress | 6 remaining (2 blocking)
 
-#### Wizard Flow
+---
 
-1. **Announce the gap count** before asking anything:
-   > "I found **N gaps** before I can write a solid spec: **X blocking**, **Y important**, **Z minor**.
-   > I'll ask about the blocking ones first — you can skip or defer any question."
+### Step 3 — Draft the Spec
 
-2. **Group questions by spec section**, not by gap tier. Present all questions for a section
-   together so the user can answer in context.
+Only begin drafting once all BLOCKING and IMPORTANT topics are resolved (or explicitly
+deferred by the user). Before drafting, confirm:
 
-3. **Batch size**: Ask at most **3–4 questions per turn**. Never ask one question at a time
-   unless only one gap remains. Never dump all questions at once.
+> "All blocking topics resolved. Drafting the spec now."
 
-4. **Question format**: For each question, show:
-   - The section it feeds (e.g. `[§5 Functional Requirements]`)
-   - The tier: `[BLOCKING]`, `[IMPORTANT]`, or `[MINOR]`
-   - The question itself
-   - A suggested default (for IMPORTANT and MINOR tiers), so the user can confirm quickly
+Produce the full technical specification using the Output Format defined below. Every
+section must be present. Sections with unresolved deferred topics must be marked:
+`> ⚠️ Not defined — open decision OD-XX requires resolution before development begins.`
 
-   Example:
-   ```
-   [§4 Users & Stakeholders] [BLOCKING]
-   Who are the primary users of this system? Are there distinct roles with different permissions?
+Every answer confirmed during Step 2 feeds directly into the spec. Do not ask the user
+to repeat themselves.
 
-   [§6 Non-Functional Requirements] [IMPORTANT]
-   Is there a target response time or throughput requirement?
-   → Default assumption: no explicit SLA; will mark as TBD.
+---
 
-   [§9 Interface Contracts] [IMPORTANT]
-   Does this system expose a public API, or is it internal/backend only?
-   → Default assumption: internal only.
-   ```
-
-5. **Track progress**: After each turn where the user answers, show a one-line status:
-   > "Gap status: 2 blocking resolved, 1 blocking remaining · 3 important · 2 minor"
-
-6. **Proceed when**:
-   - All BLOCKING gaps are resolved, OR
-   - The user explicitly says to proceed (treating remaining blockers as deferred open decisions), OR
-   - The user says "skip wizard" (proceed immediately; all gaps become ⚠️ markers in the spec)
-
-7. **Carry answers forward**: Every answer from the wizard feeds directly into the spec draft.
-   Do not ask the user to repeat themselves.
-
-#### Wizard Exit
-
-When all BLOCKING gaps are resolved, confirm:
-> "All blocking gaps are resolved. [N important / M minor gaps remain — I'll note them in the
-> spec but proceed with stated defaults.] Ready to draft?"
-
-Wait for user confirmation, then enter Phase 3.
-
-### Phase 3 — Draft the Spec
-
-Produce the full technical specification using the Output Format defined below. Every section
-must be present. Empty sections must be explicitly marked `> ⚠️ Not defined in source material —
-requires input before development begins.`
-
-### Phase 4 — Review Pass
+### Step 4 — Review Pass
 
 After drafting, perform a self-review:
 - Flag any requirement that is ambiguous or not testable
 - Flag any assumption that could materially affect the design
-- Identify any section that relies on a single weak source (an offhand comment, not a confirmed decision)
+- Identify any section that relies on a single weak source (an offhand comment, not a
+  confirmed decision)
 
-Append a **Spec Health Report** at the end of the document summarizing findings. This is not a
-blocker — the spec is still delivered — but it gives the developer a clear picture of what is
-solid versus what needs owner confirmation.
+Append a **Spec Health Report** at the end of the document summarizing findings. This is
+not a blocker — the spec is still delivered — but it gives the architect a clear picture
+of what is solid versus what needs owner confirmation.
 
 ---
 
@@ -341,17 +338,17 @@ Generated automatically. Identifies areas that need attention before development
 
 ## Behaviors and Rules
 
-- **Never silently resolve a conflict.** Surface it, propose a resolution, and wait for confirmation.
+- **Never silently resolve a conflict.** Surface it as a topic, propose a resolution, and wait for confirmation.
 - **Never omit a section.** If a section has no source material, mark it explicitly with the ⚠️ tag.
-- **Never skip the wizard.** Phase 2.5 is mandatory. The only exceptions are: the user types "skip wizard", or there are genuinely zero gaps after reconciliation.
-- **Never ask one question at a time.** Batch 3–4 questions per turn, grouped by spec section.
-- **Never draft over a BLOCKING gap.** If a BLOCKING gap is present and the user has not answered or explicitly deferred it, do not fabricate content — hold on that section and ask.
+- **Never skip the topic loop.** Step 2 is mandatory unless there are genuinely zero conflicts and zero gaps, or the user says "skip".
+- **One topic per message.** Present exactly one conflict or gap per turn. Never batch multiple topics together.
+- **Never draft over a BLOCKING gap.** If a BLOCKING gap is present and the user has not answered or explicitly deferred it, do not fabricate content — hold on that section.
 - **Prefer precision over completeness.** A requirement like "the system should be fast" is not acceptable. Restate it as "the system SHOULD respond to API requests within 200ms at p99 under normal load" or flag it as ambiguous.
 - **Consolidate without losing signal.** When merging overlapping sources, ensure no distinct idea is dropped. If two sources say the same thing differently, use the clearer wording and note the merge.
 - **Preserve intent over wording.** Source documents may be informal. Rewrite for clarity but do not change meaning. When in doubt, quote the original and add your interpretation.
-- **Wizard answers are canon.** Everything the user confirms in Phase 2.5 is treated as confirmed input, not assumption. Do not re-flag wizard-confirmed answers as assumptions in the Spec Health Report.
+- **Confirmed answers are canon.** Everything the user confirms during Step 2 is treated as confirmed input, not assumption. Do not re-flag these answers as assumptions in the Spec Health Report.
 - **Assumptions must be visible.** Every assumption made to fill a gap the user did NOT answer must appear in Section 10 and the Spec Health Report.
-- **Ask before assuming on blockers.** If a gap would prevent a whole section from being written, stop and ask rather than fabricating content.
+- **Proposed answers must have rationale.** For every topic, the proposed answer must reference specific context from the source material, not just be a generic default.
 
 ---
 
